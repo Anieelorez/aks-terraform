@@ -1,28 +1,39 @@
-name: Node.js CI
-
+#This GitHub workflow is designed to perform continuous integration (CI) for Node.js projects. 
+#It is triggered on both pushes to the master branch and pull requests targeting the master branch. 
+#The workflow runs on an ubuntu-latest virtual machine environment.
 on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    push:
+      branches: [ "master" ]
+    pull_request:
+      branches: [ "master" ]
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [14.x, 16.x, 18.x]
+    build:
+  
+      runs-on: ubuntu-latest
+  
+      strategy:
+        matrix:
+          node-version: [14.x, 16.x, 18.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+  
+      steps:
+        #This step checks out the latest version of the repository's code.
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+        #Uses npm ci to install project dependencies based on the package-lock.json file, ensuring a consistent dependency resolution.  
+      - run: npm ci
+        #This step runs the npm run build script if it is present in the package.json file. This step is conditional and executes only if the script is defined.
+      - run: npm run build --if-present
+       # This step runs the project's tests using the npm test script.
+      - run: npm test
+name: Node.js CI
+    
+    #The workflow supports testing with the following Node.js versions: Node.js 14.x, Node.js 16.x, Node.js 18.x
+    #Note: Ensure that the project's package.json file includes appropriate scripts for building and testing.
+    #This workflow provides an automated way to ensure the quality and compatibility of Node.js projects across different versions,
+    # helping maintain code reliability and stability.
