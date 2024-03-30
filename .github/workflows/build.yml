@@ -1,6 +1,6 @@
-#This GitHub documentation outlines the Build workflow, which is responsible for building and deploying a Docker image for the project.
-#The Build workflow is triggered on pushes to the main branch. It consists of two jobs: build and deploy.
-#Triggered when changes are pushed to the main branch.
+# This GitHub documentation outlines the Build workflow, which is responsible for building and deploying a Docker image for the project.
+# The Build workflow is triggered on pushes to the main branch. It consists of two jobs: sonarcloud, build, and deploy.
+
 name: Build
 
 on:
@@ -8,38 +8,51 @@ on:
     branches: [ "main" ]
 
 jobs:
+  sonarcloud:
+    runs-on: self-hosted
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'reopened' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with: # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      #Checks out the code from the repository using the actions/checkout action.
-    - uses: actions/checkout@v3
-      #Builds a Docker image tagged with imagename.
-    - name: Build and push Docker image
-      run: |
-        docker build -t imagename .
-        docker tag imagename anieelorez/newflask:latest
-        docker login -u ${{ secrets.Dockerhub_username }} -p ${{ secrets.Dockerhub_token }}
-        docker push anieelorez/newflask:latest
-      env:
-        DOCKER_CLI_ACI: 1
+      # Checks out the code from the repository using the actions/checkout action.
+      - uses: actions/checkout@v3
+      # Builds a Docker image tagged with imagename.
+      - name: Build and push Docker image
+        run: |
+          docker build -t newflask .
+          docker tag newflask anieelorez/newflask:latest
+          docker login -u ${{ secrets.Dockerhub_username }} -p ${{ secrets.Dockerhub_token }}
+          docker push anieelorez/newflask:latest
+        env:
+          DOCKER_CLI_ACI: 1
 
   deploy:
     needs: build
     runs-on: self-hosted
     steps:
-    # Pulls the Docker image anieelorez/newflask:latest from Docker Hub.
-    - name: Docker pull image
-      run: docker pull anieelorez/newflask:latest
-    # Scans the Docker image using Trivy and saves the scan results to trivyimagedeploy.txt.
-    - name: Image scan
-      run: trivy image anieelorez/newflask:latest > trivyimagedeploy.txt
-    # Runs a Docker container named newflask from the pulled Docker image, mapping port 3000 on the host to port 3000 on the container.
-    - name: Deploy to container
-      run: docker run -d --name newflask -p 3000:3000 anieelorez/newflask:latest
-    #  Updates the Kubernetes configuration (kubeconfig) for the Azure Kubernetes Service (AKS) cluster named EKS_CLOUD in the ap-south-1 region.
-    - name: Update kubeconfig
-      run: azure aks --region ap-south-1 update-kubeconfig --name EKS_CLOUD
-    # Applies the Kubernetes deployment and service configurations defined in deployment-service.yml.
-    - name: Deploy to Kubernetes
-      run: kubectl apply -f deployment-service.yml
+      # Pulls the Docker image anieelorez/newflask:latest from Docker Hub.
+      - name: Docker pull image
+        run: docker pull anieelorez/newflask:latest
+      # Scans the Docker image using Trivy and saves the scan results to trivyimagedeploy.txt.
+      - name: Image scan
+        run: trivy image anieelorez/newflask:latest > trivyimagedeploy.txt
+      # Runs a Docker container named newflask from the pulled Docker image, mapping port 3000 on the host to port 3000 on the container.
+      - name: Deploy to container
+        run: docker run -d --name newflask -p 3000:3000 anieelorez/newflask:latest
+      # Updates the Kubernetes configuration (kubeconfig) for the Azure Kubernetes Service (AKS) cluster named EKS_CLOUD in the ap-south-1 region.
+      - name: Update kubeconfig
+        run: azure aks --region ap-south-1 update-kubeconfig --name EKS_CLOUD
+      # Applies the Kubernetes deployment and service configurations defined in deployment-service.yml.
+      - name: Deploy to Kubernetes
+        run: kubectl apply -f deployment-service.yml
