@@ -27,3 +27,8 @@ variable "node_resource_group" {
   type        = string
   description = "RG name for cluster resources in Azure"
 }
+
+variable "acr_name" {
+  type        = string
+  description = "ACR name"
+}
