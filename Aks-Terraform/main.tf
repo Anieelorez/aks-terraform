@@ -35,8 +35,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
     enable_auto_scaling = false
   }
 
-  
-
   identity {
     type = "SystemAssigned"
   }
@@ -60,3 +58,66 @@ resource "kubernetes_storage_class" "example" {
     type = "pd-standard"
   }
 }
+resource "azurerm_log_analytics_workspace" "example" {
+  name                = var.azurerm_log_analytics_workspace
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  sku                 = "PerGB2018"
+}
+
+resource "azurerm_monitor_diagnostic_setting" "example" {
+  name               = var.azurerm_log_analytics_workspace
+  target_resource_id = azurerm_kubernetes_cluster.example.id
+
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.example.id
+
+  log {
+    category = "kube-apiserver"
+    enabled  = true
+
+    retention_policy {
+      enabled = false
+    }
+  }
+}
+
+# Example Terraform configuration for Azure Monitor alerts
+resource "azurerm_monitor_metric_alert" "example" {
+  name                   = var.azurerm_monitor_metric_alert
+  resource_group_name    = var.resource_group_name
+  scopes                 = [azurerm_kubernetes_cluster.example.id]
+  description            = "Example Metric Alert"
+  severity               = 3
+  enabled                = true
+
+  criteria {
+    metric_namespace = "Microsoft.ContainerService"
+    metric_name      = "CPUUtilization"
+    aggregation      = "Average"
+    operator         = "GreaterThan"
+    threshold        = 80
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.example.id
+  }
+}
+
+# Example Terraform configuration for RBAC
+resource "azurerm_role_definition" "example" {
+  name        = "my-custom-role"
+  scope       = azurerm_kubernetes_cluster.example.id
+  description = "This is a custom role created via Terraform"
+
+  permissions {
+    actions     = ["*"]
+    not_actions = []
+  }
+}
+
+resource "azurerm_role_assignment" "example" {
+  scope                = arerm_kubernetes_cluster.example.id
+  role_definition_name = azurerm_role_definition.example.name
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
