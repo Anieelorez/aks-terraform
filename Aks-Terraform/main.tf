@@ -35,6 +35,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
     enable_auto_scaling = false
   }
 
+  
+
   identity {
     type = "SystemAssigned"
   }
@@ -46,5 +48,17 @@ resource "azurerm_kubernetes_cluster" "aks" {
   network_profile {
     load_balancer_sku = "standard"
     network_plugin    = "kubenet" # azure (CNI)
+    network_policy    = "calico"
+  
+  }
+  
+}
+resource "kubernetes_storage_class" "example" {
+  metadata {
+    name =  var.resource_group_name
+  }
+  storage_provisioner = "kubernetes.io/gce-pd"
+  parameters = {
+    type = "pd-standard"
   }
 }
