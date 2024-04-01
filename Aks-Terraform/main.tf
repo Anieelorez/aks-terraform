@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "rg" {
 resource "azurerm_role_assignment" "role_acrpull" {
   scope                            = azurerm_container_registry.acr.id
   role_definition_name             = "AcrPull"
-  principal_id                     = azurerm_kubernetes_cluster.aks.kubelet_identity.0.object_id
+  principal_id                     = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
   skip_service_principal_aad_check = true
 }
 
@@ -47,8 +47,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
     load_balancer_sku = "standard"
     network_plugin    = "kubenet" # azure (CNI)
   }
-  
 }
+
 resource "kubernetes_storage_class" "example" {
   metadata {
     name =  var.resource_group_name
@@ -58,16 +58,17 @@ resource "kubernetes_storage_class" "example" {
     type = "pd-standard"
   }
 }
+
 resource "azurerm_log_analytics_workspace" "example" {
   name                = var.azurerm_log_analytics_workspace
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.rg.name
   sku                 = "PerGB2018"
 }
 
 resource "azurerm_monitor_diagnostic_setting" "example" {
   name               = var.azurerm_log_analytics_workspace
-  target_resource_id = azurerm_kubernetes_cluster.example.id
+  target_resource_id = azurerm_kubernetes_cluster.aks.id
 
   log_analytics_workspace_id = azurerm_log_analytics_workspace.example.id
 
@@ -84,8 +85,8 @@ resource "azurerm_monitor_diagnostic_setting" "example" {
 # Example Terraform configuration for Azure Monitor alerts
 resource "azurerm_monitor_metric_alert" "example" {
   name                   = var.azurerm_monitor_metric_alert
-  resource_group_name    = var.resource_group_name
-  scopes                 = [azurerm_kubernetes_cluster.example.id]
+  resource_group_name    = azurerm_resource_group.rg.name
+  scopes                 = [azurerm_kubernetes_cluster.aks.id]
   description            = "Example Metric Alert"
   severity               = 3
   enabled                = true
@@ -106,7 +107,7 @@ resource "azurerm_monitor_metric_alert" "example" {
 # Example Terraform configuration for RBAC
 resource "azurerm_role_definition" "example" {
   name        = "my-custom-role"
-  scope       = azurerm_kubernetes_cluster.example.id
+  scope       = azurerm_kubernetes_cluster.aks.id
   description = "This is a custom role created via Terraform"
 
   permissions {
@@ -116,8 +117,7 @@ resource "azurerm_role_definition" "example" {
 }
 
 resource "azurerm_role_assignment" "example" {
-  scope                = arerm_kubernetes_cluster.example.id
+  scope                = azurerm_kubernetes_cluster.aks.id
   role_definition_name = azurerm_role_definition.example.name
   principal_id         = data.azurerm_client_config.current.object_id
 }
-
