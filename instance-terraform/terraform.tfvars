@@ -1,0 +1,5 @@
+resource_group_name = "rg"
+location = "CentralUS"
+azurerm_virtual_network_name = ""
+azurerm_subnet_name = ""
+azurerm_network_interface_name = ""
