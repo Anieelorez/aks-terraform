@@ -1,0 +1,89 @@
+Azure Monitoring and Logging Documentation
+
+This documentation provides guidance on setting up monitoring, logging, and alerts for Azure resources using Terraform.
+
+#1. Azure Log Analytics Workspace
+
+The Log Analytics workspace collects and analyzes telemetry data from various Azure resources.
+
+```hcl
+resource "azurerm_log_analytics_workspace" "example" {
+  name                = var.azurerm_log_analytics_workspace
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  sku                 = "PerGB2018"
+}
+```
+
+#2. Azure Monitor Diagnostic Setting
+
+The diagnostic setting enables you to send diagnostic logs to the Log Analytics workspace for analysis.
+
+```hcl
+resource "azurerm_monitor_diagnostic_setting" "example" {
+  name                        = var.azurerm_log_analytics_workspace
+  target_resource_id          = azurerm_kubernetes_cluster.example.id
+  log_analytics_workspace_id  = azurerm_log_analytics_workspace.example.id
+
+  log {
+    category = "kube-apiserver"
+    enabled  = true
+
+    retention_policy {
+      enabled = false
+    }
+  }
+}
+```
+
+#3. Azure Monitor Metric Alert
+
+The metric alert monitors metric values and triggers actions based on defined criteria.
+
+```hcl
+resource "azurerm_monitor_metric_alert" "example" {
+  name                = var.azurerm_monitor_metric_alert
+  resource_group_name = var.resource_group_name
+  scopes              = [azurerm_kubernetes_cluster.example.id]
+  description         = "Example Metric Alert"
+  severity            = 3
+  enabled             = true
+
+  criteria {
+    metric_namespace = "Microsoft.ContainerService"
+    metric_name      = "CPUUtilization"
+    aggregation      = "Average"
+    operator         = "GreaterThan"
+    threshold        = 80
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.example.id
+  }
+}
+```
+
+#4. Role-Based Access Control (RBAC)
+
+RBAC allows you to control access to Azure Kubernetes Service resources.
+
+```hcl
+resource "azurerm_role_definition" "example" {
+  name        = "my-custom-role"
+  scope       = azurerm_kubernetes_cluster.example.id
+  description = "This is a custom role created via Terraform"
+
+  permissions {
+    actions     = ["*"]
+    not_actions = []
+  }
+}
+
+resource "azurerm_role_assignment" "example" {
+  scope                = azurerm_kubernetes_cluster.example.id
+  role_definition_name = azurerm_role_definition.example.name
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+```
+
+This documentation outlines the Terraform configurations required to set up monitoring, logging, and RBAC for Azure Kubernetes Service and other Azure resources. Ensure to replace variables with actual values as per your environment setup.
