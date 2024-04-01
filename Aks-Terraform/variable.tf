@@ -32,3 +32,13 @@ variable "acr_name" {
   type        = string
   description = "ACR name"
 }
+
+variable "azurerm_log_analytics_workspace" {
+  type = string
+  description = "monitoring aks "
+}
+
+variable "azurerm_monitor_metric_alert" {
+  type =  string
+  description = "alerting system for aks" 
+}
