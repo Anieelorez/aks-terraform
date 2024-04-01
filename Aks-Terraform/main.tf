@@ -48,8 +48,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
   network_profile {
     load_balancer_sku = "standard"
     network_plugin    = "kubenet" # azure (CNI)
-    network_policy    = "calico"
-  
   }
   
 }
