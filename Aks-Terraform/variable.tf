@@ -1,37 +1,15 @@
-variable "resource_group_name" {
-  type        = string
-  description = "RG name in Azure"
-}
+variable "resource_group_name" {}
+variable "location" {}
 
-variable "location" {
-  type        = string
-  description = "Resources location in Azure"
-}
+variable "cluster_name" {}
 
-variable "cluster_name" {
-  type        = string
-  description = "AKS name in Azure"
-}
+variable "kubernetes_version" {}
 
-variable "kubernetes_version" {
-  type        = string
-  description = "Kubernetes version"
-}
+variable "system_node_count" {}
 
-variable "system_node_count" {
-  type        = number
-  description = "Number of AKS worker nodes"
-}
+variable "node_resource_group" {}
 
-variable "node_resource_group" {
-  type        = string
-  description = "RG name for cluster resources in Azure"
-}
-
-variable "acr_name" {
-  type        = string
-  description = "ACR name"
-}
+variable "acr_name" {}
 
 variable "azurerm_log_analytics_workspace" {
   type = string

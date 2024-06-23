@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "example" {
 
 resource "azurerm_virtual_network" "main" {
   name                = var.azurerm_virtual_network_name
-  address_space       = ["10.0.0.0/16"]
+  address_space       = var.address_space
   location            = var.location
   resource_group_name = var.resource_group_name
 }
@@ -15,7 +15,7 @@ resource "azurerm_subnet" "internal" {
   name                 = var.azurerm_subnet_name
   resource_group_name  = var.resource_group_name
   virtual_network_name = var.azurerm_virtual_network_name
-  address_prefixes     = ["10.0.2.0/24"]
+  address_prefixes     = var.address_prefixes
 }
 
 resource "azurerm_network_interface" "main" {
@@ -25,7 +25,7 @@ resource "azurerm_network_interface" "main" {
   ip_configuration {
     name                          = "testconfiguration1"
     subnet_id                     = azurerm_subnet.internal.id
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address_allocation = "static"
   }
 }
 
